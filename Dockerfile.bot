@@ -1,0 +1,27 @@
+# Production Stage
+FROM python:latest as production
+
+WORKDIR /app
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy all project files
+COPY . .
+
+# Run the bot
+CMD ["python", "/app/bot/bot.py"]
+
+# Debugging Stage
+FROM python:latest as debug
+WORKDIR /app
+COPY requirements.txt .
+
+# Install dependencies including debug tools
+RUN pip install --no-cache-dir -r requirements.txt && pip install debugpy
+
+COPY . .
+
+# Start debugpy for remote debugging
+CMD ["python","-Xfrozen_modules=off", "-m", "debugpy", "--listen", "127.0.0.1:5678", "--wait-for-client", "/app/bot/bot.py"]

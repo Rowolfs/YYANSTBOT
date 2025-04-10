@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+  bot:
+    image: yyanstbot
+    container_name: yyanstbot
+    build:
+      context: .
+      dockerfile: bot/Dockerfile.bot
+      target: production
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    environment:
+      - ENV_VAR_NAME=value
+    networks:
+      - app-network
+
+  bot_debug:
+    image: yyanstbot_debug
+    container_name: yyanstbot_debug
+    build:
+      context: .
+      dockerfile: bot/Dockerfile.bot
+      target: debug
+    ports:
+      - "8090:8090"
+      - "5678:5678"
+    volumes:
+      - .:/app
+    environment:
+      - ENV_VAR_NAME=value
+      - ENV PYDEVD_DISABLE_FILE_VALIDATION=1
+    restart: on-failure
+    networks:
+      - app-network
+
+  redis:
+    image: redis:latest
+    container_name: yyanstbot_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  redis-data:  # <-- This line defines the missing volume

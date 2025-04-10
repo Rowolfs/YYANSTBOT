@@ -1,0 +1,6 @@
+pydantic-settings==2.4.0
+aiogram
+sqlalchemy
+python-dotenv
+redis
+apscheduler
