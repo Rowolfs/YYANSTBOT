@@ -28,12 +28,15 @@ async def commandflow_callback(callback: CallbackQuery, state: FSMContext):
             context[key] = value
 
 
-    context["from_user_id"] = callback.from_user.id
+    context["user_id"] = callback.from_user.id
 
     # Если target — это queue_id, продолжаем очередь
     if target.isdigit():
         queue_id = int(target)
-        await QueueCommands.set_active(callback.message, state, queue_id, **context)
+        if queue_id <= 0:
+            await QueueCommands.set_active(callback.message, state, queue_id, **context)
+        else:
+            await QueueCommands.next(callback.message, state, queue_id, **context)
     else:
         # Ищем команду по имени (target) в реестре команд
         command = QueueCommands.command_registry.get(target)

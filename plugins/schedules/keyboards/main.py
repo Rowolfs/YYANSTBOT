@@ -5,12 +5,11 @@ from commandflow.commands.base import KeyboardCommand
 from commandflow.core import QueueCommands
 
 
-queue1 = QueueCommands(queue=[("PrintHello",{})])
-
+queue1 = QueueCommands(queue=[("InputCommand",{"prompt": "Введите название расписания", "input_key": "schedule_name"}),("PrintHello",{})])
+queue2 = QueueCommands(queue=[("select_schedules",{}),("PrintHello",{})])
 
 @QueueCommands.register
 class MainKeyboardCommand(KeyboardCommand):
-    name = "main_keyboard"
 
     def build_keyboard(self, **context):
         

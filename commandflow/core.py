@@ -1,5 +1,7 @@
 ### commandflow/core.py
 from commandflow.storage import storage
+from config import logger
+import datetime
 import copy
 import random
 import asyncio
@@ -9,7 +11,7 @@ class QueueCommands:
     command_registry = {}
 
     def __init__(self, queue=None):
-        self.id = len(QueueCommands.queues)
+        self.id = -len(QueueCommands.queues)
         QueueCommands.queues[self.id] = self
         self.queue = queue if queue is not None else []
         self.cursor = 0
@@ -19,7 +21,7 @@ class QueueCommands:
     async def set_active(message, state, queue_id: int,**kwargs):
         queue =  await QueueCommands.get(queue_id)
         queue = copy.deepcopy(queue)
-        queue.id = random.randint(0, 1000000)
+        queue.id = int(datetime.datetime.now().timestamp())
         await storage.save(queue.id, queue.to_dict())
         await queue.next_by_instance(message, state, **kwargs)
         return queue
@@ -48,15 +50,25 @@ class QueueCommands:
             await storage.delete(self.id)
             return
 
-        command_func, command_args = self.queue[self.cursor]
-
-
+        command_name, command_args = self.queue[self.cursor]
         self.cursor += 1
+
         merged_args = {**command_args, **kwargs}
         self.context = {**self.context, **merged_args}
+
         await storage.save(self.id, self.to_dict())
-        command = QueueCommands.command_registry.get(command_func)
+
+        command = QueueCommands.command_registry.get(command_name)
+        if command is None:
+            raise ValueError(f"Команда '{command_name}' не найдена в command_registry")
         await command(message, state, self.id, **self.context)
+        if(self.cursor >= self.size):
+            await storage.delete(self.id)
+            logger.info(f"Queue {self.id} is finished")
+            return
+
+
+
 
     @classmethod
     async def next(cls, message, state, queue_id: int, **kwargs):
@@ -72,17 +84,22 @@ class QueueCommands:
         return {
             "id": self.id,
             "queue": [
-                (func.__class__.__name__, args) for func, args in self.queue
+                (
+                    func if isinstance(func, str) else func.__class__.__name__,
+                    args
+                )
+                for func, args in self.queue
             ],
             "cursor": self.cursor,
             "context": self.context,
             "size": self.size
         }
 
+
     @classmethod
     def from_dict(cls, data):
         queue = [
-            (cls.command_registry[name], args) for name, args in data["queue"]
+            (name, args) for name, args in data["queue"]
         ]
         obj = cls(queue=queue)
         obj.id = data["id"]

@@ -4,6 +4,8 @@ import pkgutil
 from aiogram import Bot, Dispatcher, Router
 from config import TOKEN, engine, logger, Base, bot
 from commandflow.router import router
+from commandflow.commands.input import router as input_router
+
 import sys
 import os
 
@@ -17,6 +19,7 @@ Base.metadata.create_all(bind=engine)
 # Dispatcher
 dp = Dispatcher()
 dp.include_router(router)  # Подключаем маршрутизатор для состояний
+dp.include_router(input_router) # Подключаем маршрутизатор для ввода текста
 
 
 
