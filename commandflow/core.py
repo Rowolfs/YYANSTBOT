@@ -6,6 +6,9 @@ import copy
 import random
 import asyncio
 
+class CommandError(Exception):
+    pass
+
 class QueueCommands:
     queues = {}
     command_registry = {}
@@ -60,7 +63,7 @@ class QueueCommands:
 
         command = QueueCommands.command_registry.get(command_name)
         if command is None:
-            raise ValueError(f"Команда '{command_name}' не найдена в command_registry")
+            raise CommandError(f"Команда '{command_name}' не найдена в command_registry")
         await command(message, state, self.id, **self.context)
         if(self.cursor >= self.size):
             await storage.delete(self.id)
@@ -111,4 +114,5 @@ class QueueCommands:
     @classmethod
     def register(cls, command_cls):
         cls.command_registry[command_cls.__name__] = command_cls()
+        logger.info(f"Command {command_cls.__name__} registered")
         return command_cls

@@ -12,7 +12,7 @@ queue1 = QueueCommands(queue=[("PrintHello",{})])
 
 
 @QueueCommands.register
-class Select(KeyboardCommand):
+class SelectSchedule(KeyboardCommand):
     name = "select_schedules"
 
     def build_keyboard(self, **context):

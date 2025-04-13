@@ -6,6 +6,9 @@ from config import TOKEN, engine, logger, Base, bot
 from commandflow.router import router
 from commandflow.commands.input import router as input_router
 
+
+
+
 import sys
 import os
 
@@ -15,6 +18,9 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 
 Base.metadata.create_all(bind=engine)
+
+from plugins.schedules.keyboards.schedule_editor import ScheduleEditorCommand
+from plugins.schedules.keyboards.select_schedules import SelectSchedule
 
 # Dispatcher
 dp = Dispatcher()

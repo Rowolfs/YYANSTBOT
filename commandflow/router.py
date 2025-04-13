@@ -3,7 +3,8 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
-from commandflow.core import QueueCommands
+from commandflow.core import QueueCommands, CommandError
+
 
 router = Router()
 
@@ -30,17 +31,23 @@ async def commandflow_callback(callback: CallbackQuery, state: FSMContext):
 
     context["user_id"] = callback.from_user.id
 
+    
+
+
     # Если target — это queue_id, продолжаем очередь
-    if target.isdigit():
+    try:
+        target = int(target)
         queue_id = int(target)
         if queue_id <= 0:
             await QueueCommands.set_active(callback.message, state, queue_id, **context)
         else:
             await QueueCommands.next(callback.message, state, queue_id, **context)
-    else:
+    except ValueError:
         # Ищем команду по имени (target) в реестре команд
         command = QueueCommands.command_registry.get(target)
         if command:
             await command(callback, state, queue_id=None, **context)
         else:
-            await callback.answer("Команда не найдена", show_alert=True)
+            await callback.answer(f"Команда {target} не найдена", show_alert=True)
+    except CommandError as e:
+        await callback.answer(f"Ошибка: {str(e)}", show_alert=True)
